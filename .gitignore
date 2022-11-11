@@ -1,0 +1,6 @@
+
+.idea/
+.vscode/
+dataset
+venv
+encodings.pickle
