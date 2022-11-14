@@ -1,9 +1,3 @@
-# 参数
-# --encodings encodings.pickle
-
-# USAGE
-# python cluster_faces.py --encodings encodings.pickle
-
 # import the necessary packages
 from sklearn.cluster import DBSCAN
 from imutils import build_montages
@@ -11,34 +5,25 @@ import numpy as np
 import argparse
 import pickle
 import cv2
-from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score  # 计算 轮廓系数，CH 指标，DBI
 
-# construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-e", "--encodings", required=True,
-                help="path to serialized db of facial encodings")
-ap.add_argument("-j", "--jobs", type=int, default=-1,
-                help="# of parallel jobs to run (-1 will use all CPUs)")
-args = vars(ap.parse_args())
+encoding_path = "encodings.pickle"
+jobs = -1
 
 # load the serialized face encodings + bounding box locations from
 # disk, then extract the set of encodings to so we can cluster on
 # them
 print("[INFO] loading encodings...")
-data = pickle.loads(open(args["encodings"], "rb").read())
+data = pickle.loads(open(encoding_path, "rb").read())
 data = np.array(data)
-# print(data)
 encodings = [d["encoding"] for d in data]
 print('encodings.shape', np.shape(encodings))
 
 # cluster the embeddings
 print("[INFO] clustering...")
-clt = DBSCAN(metric="euclidean", n_jobs=args["jobs"])
+clt = DBSCAN(metric="euclidean", n_jobs=jobs)
 # labels = clt.fit_predict(encodings)
 # print(labels)
 clt.fit(encodings)
-a = clt.fit_predict(encodings)
-print('a:', a)
 print('clt.labels_:', clt.labels_)
 
 # determine the total number of unique faces found in the dataset
@@ -46,18 +31,15 @@ labelIDs = np.unique(clt.labels_)
 print('labelIDs.shape', np.shape(labelIDs))
 print('clt.labels_.shape:', np.shape(clt.labels_))
 numUniqueFaces = len(np.where(labelIDs > -1)[0])
-# print(numUniqueFaces)
 print("[INFO] # unique faces: {}".format(numUniqueFaces))
 
 # loop over the unique face integers
-all_face = []
 show_num = 30  # 显示人脸数量
 for labelID in labelIDs:
     # find all indexes into the `data` array that belong to the
     # current label ID, then randomly sample a maximum of 25 indexes
     # from the set
     print("[INFO] faces for face ID: {}".format(labelID))
-    # print('clt.labels_',clt.labels_)
     idxs = np.where(clt.labels_ == labelID)[0]
     # print('idxs1',idxs)
     idxs = np.random.choice(idxs, size=min(show_num, len(idxs)), replace=False)
@@ -77,13 +59,8 @@ for labelID in labelIDs:
         # faces montage list
         face = cv2.resize(image, (96, 96))
         faces.append(face)
-        # all_face.append(face)
-        # for i in range(show_num-len(idxs)):
-        # 	space_img = cv2.imread('space.jpg')
-        # 	space_img = cv2.resize(space_img,(96,96))
-        # 	all_face.append(space_img)
-        # all_faace.append(faces)
-        # # create a montage using 96x96 "tiles" with 5 rows and 5 columns
+
+    # create a montage using 96x96 "tiles" with 5 rows and 5 columns
     montage = build_montages(faces, (96, 96), (5, 5))[0]
     #
     # # show the output montage
@@ -91,23 +68,3 @@ for labelID in labelIDs:
     title = "Unknown Faces" if labelID == -1 else title
     cv2.imshow(title, montage)
     cv2.waitKey(0)
-
-# s1 = silhouette_score(encodings, clt.labels_, metric='euclidean')  # 计算轮廓系数
-# # s1 = silhouette_score(encodings, a, metric='euclidean')  # 计算轮廓系数
-# s2 = calinski_harabasz_score(encodings, clt.labels_)  # 计算CH score
-# s3 = davies_bouldin_score(encodings, clt.labels_)  # 计算 DBI
-#
-# print('计算轮廓系数', s1)
-# print('计算 CH分数 CH', s2)
-# print('计算 戴维森堡丁指数 DBI', s3)
-#
-# # create a montage using 96x96 "tiles" with 5 rows and 5 columns
-# print(all_face)
-# montage = build_montages(all_face, (48, 48), (show_num, len(labelIDs)))[0]
-
-# show the output montage
-# title = "Face ID #{}".format(labelID)
-# title = 'output'
-# # title = "Unknown Faces" if labelID == -1 else title
-# cv2.imshow(title, montage)
-# cv2.waitKey(0)
