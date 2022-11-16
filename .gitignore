@@ -1,6 +1,7 @@
 
 .idea/
 .vscode/
-dataset
+faces
 venv
 encodings.pickle
+output

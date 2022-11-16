@@ -26,7 +26,7 @@ clt = DBSCAN(metric="euclidean", n_jobs=jobs)
 clt.fit(encodings)
 print('clt.labels_:', clt.labels_)
 
-# determine the total number of unique faces found in the dataset
+# determine the total number of unique faces found in the faces
 labelIDs = np.unique(clt.labels_)
 print('labelIDs.shape', np.shape(labelIDs))
 print('clt.labels_.shape:', np.shape(clt.labels_))

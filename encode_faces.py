@@ -4,7 +4,7 @@ import face_recognition
 import pickle
 import cv2
 
-dataset = "dataset"
+dataset = "faces"
 encoding_path = "encodings.pickle"
 detection_method = "cnn"
 
