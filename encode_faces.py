@@ -27,7 +27,7 @@ for (i, imagePath) in enumerate(imagePaths):
         # detect the (x, y)-coordinates of the bounding boxes
         # corresponding to each face in the input image
         # 定位图像中的人脸
-        boxes = face_recognition.face_locations(rgb, model=detection_method)
+        boxes = face_recognition.face_locations(rgb, number_of_times_to_upsample=0, model=detection_method)
         if len(boxes) == 0:
             continue
         print(boxes)
