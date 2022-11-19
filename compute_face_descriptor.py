@@ -1,8 +1,8 @@
-import sys
 import os
 import dlib
 import glob
 import cv2
+import pickle
 import time
 
 # 指定路径
@@ -11,7 +11,6 @@ model_path = current_path + '/model/'
 shape_predictor_model = model_path + '/shape_predictor_5_face_landmarks.dat'
 face_rec_model = model_path + '/dlib_face_recognition_resnet_model_v1.dat'
 face_folder = current_path + '/faces/'
-output_folder = current_path + '/output/'
 
 # 导入模型
 detector = dlib.get_frontal_face_detector()
@@ -19,8 +18,7 @@ shape_detector = dlib.shape_predictor(shape_predictor_model)
 face_recognizer = dlib.face_recognition_model_v1(face_rec_model)
 
 # 为后面操作方便，建了几个列表
-descriptors = []
-images = []
+data_set = []
 # 遍历faces文件夹中所有的图片
 start = int(round(time.time() * 1000))
 for f in glob.glob(os.path.join(face_folder, "*")):
@@ -42,36 +40,15 @@ for f in glob.glob(os.path.join(face_folder, "*")):
         face_descriptor = face_recognizer.compute_face_descriptor(img2, shape)
 
         # 保存相关信息
-        descriptors.append(face_descriptor)
-        images.append((img2, shape))
+        d = [{"image": f, "descriptor": face_descriptor}]
+        data_set.extend(d)
+
 end = int(round(time.time() * 1000))
+
+# dump the facial encodings data to disk
+print("[INFO] serializing encodings...")
+f = open("encodings.pickle", "wb")
+f.write(pickle.dumps(data_set))
+f.close()
+print('over')
 print(end - start)
-
-# 聚类
-start = int(round(time.time() * 1000))
-labels = dlib.chinese_whispers_clustering(descriptors, 0.4)
-end = int(round(time.time() * 1000))
-print(end - start)
-print("labels: {}".format(labels))
-num_classes = len(set(labels))
-print("Number of clusters: {}".format(num_classes))
-
-# 为了方便操作，用字典类型保存
-face_dict = {}
-for i in range(num_classes):
-    face_dict[i] = []
-# print face_dict
-for i in range(len(labels)):
-    face_dict[labels[i]].append(images[i])
-
-# print face_dict.keys()
-# 遍历字典，保存结果
-for key in face_dict.keys():
-    file_dir = os.path.join(output_folder, str(key))
-    if not os.path.isdir(file_dir):
-        os.makedirs(file_dir)
-
-    for index, (image, shape) in enumerate(face_dict[key]):
-        file_path = os.path.join(file_dir, 'face_' + str(index))
-        print(file_path)
-        dlib.save_face_chip(image, shape, file_path, size=150, padding=0.25)

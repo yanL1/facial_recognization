@@ -2,7 +2,6 @@
 from sklearn.cluster import DBSCAN
 from imutils import build_montages
 import numpy as np
-import argparse
 import pickle
 import cv2
 
